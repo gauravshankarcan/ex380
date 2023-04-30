@@ -129,4 +129,96 @@ pipeline {
     }
     
 ```
-    
+
+```console
+oc create secret generic ldap-secret -n openshift-config --from-literal=bindPassword=${LDAP_ADMIN_PASSWORD}
+wget -c -nv http://idm.example.com/ipa/config/ca.crt
+oc create configmap ca-config-map  -n openshift-config --from-file=ca.crt
+
+   ldap:
+      attributes:  1
+        id:
+        - dn
+        email:
+        - mail
+        name:
+        - cn
+        preferredUsername:
+        - uid
+      bindDN: "uid=admin,cn=users,cn=accounts,dc=ocp4,dc=example,dc=com"  2
+      bindPassword:  3
+        name: ldap-secret
+      ca:  4
+        name: ca-config-map
+      insecure: false
+      url: "ldaps://idm.ocp4.example.com/cn=users,cn=accounts,dc=ocp4,dc=example,dc=com?uid" 
+```
+ 
+ ```yaml
+oc adm groups sync --sync-config path --confirm
+
+kind: LDAPSyncConfig
+apiVersion: v1
+url: ldaps://idm.ocp4.example.com
+bindDN: uid=admin,cn=users,cn=accounts,dc=example,dc=com
+bindPassword:
+  file: /etc/secrets/bindPassword
+insecure: false
+ca: /etc/config/ca.crt
+rfc2307:
+    groupsQuery:
+        baseDN: "cn=groups,cn=accounts,dc=example,dc=com"
+        scope: sub
+        derefAliases: never
+        pageSize: 0
+        filter: (objectClass=ipausergroup)
+    groupUIDAttribute: dn
+    groupNameAttributes: [ cn ]
+    groupMembershipAttributes: [ member ]
+    usersQuery:
+        baseDN: "cn=users,cn=accounts,dc=example,dc=com"
+        scope: sub
+        derefAliases: never
+        pageSize: 0
+    userUIDAttribute: dn
+    userNameAttributes: [ uid ]
+``` 
+
+```
+oc patch proxy/cluster --type=merge  --patch='{"spec":{"trustedCA":{"name":"<CONFIGMAP-NAME>"}}}'
+oc patch ingresscontroller.operator/default 
+oc patcg apiserver 
+
+cat WILDCARD.pem CA.pem > COMBINED-CERT.pem
+
+openssl x509 -in wildcard-api.pem -text
+```
+```console
+config.openshift.io/inject-trusted-cabundle=true
+
+        volumeMounts:
+        - mountPath: /etc/pki/ca-trust/extracted/pem
+          name: trusted-ca
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          items:
+          - key: ca-bundle.crt
+            path: tls-ca-bundle.pem
+          name: <CONFIGMAP-NAME>
+        name: trusted-ca
+```
+
+```
+oc adm cordon worker06
+oc adm drain worker06 -delete-emptydir-data --ignore-daemonsets --force --disable-eviction
+
+ oc adm new-project debug --node-selector=""
+```
+
