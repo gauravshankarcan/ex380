@@ -222,3 +222,69 @@ oc adm drain worker06 -delete-emptydir-data --ignore-daemonsets --force --disabl
  oc adm new-project debug --node-selector=""
 ```
 
+```
+storageclass.kubernetes.io/is-default-class=true
+
+
+...output omitted...
+      volumeDevices: 1
+        - name: data 2
+          devicePath: /dev/xvda 3
+  volumes:
+    - name: data 4
+      persistentVolumeClaim:
+        claimName: block-pvc 5
+        
+        
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: iscsi-blk  1
+provisioner: kubernetes.io/no-provisioner  2
+allowVolumeExpansion: false       
+        
+        IN SS
+      storageClassName: iscsi-blk
+      accessModes: [ "ReadWriteOnce" ]        
+        
+```
+```
+[student@workstation PVs]$ limit1="requests.storage=6G"
+[student@workstation PVs]$ limit2="persistentvolumeclaims=2"
+[student@workstation PVs]$ sclass="iscsi-blk.storageclass.storage.k8s.io"
+[student@workstation PVs]$ limit3="${sclass}/persistentvolumeclaims=1"
+[student@workstation PVs]$ oc create quota storage \
+  --hard=${limit1},${limit2},${limit3}
+```  
+
+```
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-pv-01
+spec:
+  capacity:
+    storage: 500Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:  1
+    path: /mnt/disks/vol1  2
+
+  
+apiVersion: "local.storage.openshift.io/v1"  1
+kind: "LocalVolume"  2
+metadata:
+  name: "local-disks"  3
+spec:
+  storageClassDevices:
+    - storageClassName: "fast-local-storage"  4
+      volumeMode: Filesystem
+      devicePaths:
+        - /dev/sdb  5
+    - storageClassName: "standard-local-storage"  6
+      volumeMode: Filesystem
+      devicePaths:
+        - /dev/hda 
+ ```       
