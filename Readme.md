@@ -17,8 +17,37 @@ oc whoami -t
 oc import-image registry.ocp4.example.com:8443/developer/versioned-hello:latest --confirm --scheduled
   
 oc set triggers deployment/hello --from-image versioned-hello:latest -c hello  
+
+oc get deployment cluster-samples-operator -n openshift-cluster-samples-operator -o jsonpath='{.status.availableReplicas}'
+oc get pod --all-namespaces -o=custom-columns=NAME:.metadata.name,STATUS:.status.phase,NODE:.spec.nodeName
+
+oc get oauth cluster -o json
+
+secret_name=$(oc get oauth cluster \
+  -o jsonpath="{.spec.identityProviders[$filter].htpasswd.fileData.name}")
+oc extract secret/$secret_name -n openshift-config --confirm
+oc get pod -n openshift-authentication -o name
 ```
 
+```bash
+curl -k --header "Authorization: Bearer $TOKEN" -X GET https://api.example.com:6443/api
+/openapi/v2 
+```
+```yaml
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: file-integrity-operator (name should match )
+  namespace: openshift-file-integrity
+spec:
+  targetNamespaces:
+  - openshift-file-integrity (name should match )
+  ```
+
+```
+oc get clusterversion version -o jsonpath='{.status.desired.image}'
+oc adm release extract --to=release-image --from=quay.io/openshift-release-dev/ocp-release@sha256:7ffe...cc56
+```
 
 ```zsh
 oc new-app --template jenkins-persistent
