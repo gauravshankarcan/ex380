@@ -9,6 +9,18 @@ resources:
 images:
   - name: registry.ocp4.example.com:8443/redhattraining/versioned-hello
     newTag: v1.1
+    
+resources:
+- deployment.yaml   1
+secretGenerator:
+- name: mycert   2
+  files:
+  - tls.crt=priv-cert.crt   3
+  - tls.key=priv-cert.key
+  type: kubernetes.io/tls   4
+generatorOptions:
+  disableNameSuffixHash: true 
+  
 ```
 ```console
 kubectl apply -k .
@@ -78,3 +90,43 @@ secretGenerator:
   files:
   - htpasswd=htpasswd-secret-data  
   ```
+
+
+```
+pipeline {
+  triggers {
+    pollSCM ('H/3 * * * *')  / cron ('H/5 * * * *')
+  }
+  options {
+    disableConcurrentBuilds()
+  }
+  
+  agent {
+    node {
+      label 'nodejs'
+    }
+  }
+  
+          sh 'oc diff -k config | tee drift-report.txt'
+        sh '! test -s drift-report.txt'
+   sh 'oc apply --dry-run --validate -k config'
+   
+    stage ('Verify test user') {
+      when {
+        branch 'main'
+      }   
+      
+      
+  post {
+    failure {
+      archiveArtifacts artifacts: '*.txt'
+      build job: 'apply/main'
+    }
+    success {
+      sh 'rm drift-report.txt'
+      sh 'echo \'There is no configuration drift\' > no-drift.txt'
+      archiveArtifacts artifacts: '*.txt'
+    }
+    
+```
+    
