@@ -255,6 +255,9 @@ allowVolumeExpansion: false
 [student@workstation PVs]$ limit3="${sclass}/persistentvolumeclaims=1"
 [student@workstation PVs]$ oc create quota storage \
   --hard=${limit1},${limit2},${limit3}
+
+
+<storage-class-name>.​storageclass.storage.k8s.io/​requests.storage
 ```  
 
 ```
