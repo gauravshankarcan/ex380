@@ -291,3 +291,103 @@ spec:
       devicePaths:
         - /dev/hda 
  ```       
+
+
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+    alertmanagerMain:
+      volumeClaimTemplate:
+        metadata:
+          name: alertmanager-local-pv
+        spec:
+          storageClassName: gp2
+          volumeMode: Filesystem
+          resources:
+            requests:
+              storage: 20Gi
+  config.yaml: |
+    prometheusK8s:
+      retention: 15d
+      volumeClaimTemplate:
+        metadata:
+          name: prometheus-local-pv
+        spec:
+          storageClassName: gp2
+          volumeMode: Filesystem
+          resources:
+            requests:
+              storage: 40Gi
+              ```
+              
+```yaml
+apiVersion: "logging.openshift.io/v1"
+kind: "ClusterLogging"
+metadata:
+  name: "instance"
+  namespace: "openshift-logging"
+spec:
+  managementState: "Managed"
+  logStore:
+    type: "elasticsearch"
+    retentionPolicy:
+      application:
+        maxAge: 1d
+      infra:
+        maxAge: 7d
+      audit:
+        maxAge: 7d
+    elasticsearch:
+      nodeCount: 3
+      nodeSelector:
+          node-role.kubernetes.io/infra: ''
+      storage:
+        storageClassName: "local-blk"
+        size: 20G
+      redundancyPolicy: "MultipleRedundancy"
+      resources:
+        limits:
+          memory: "8Gi"
+        requests:
+          cpu: "1"
+          memory: "8Gi"
+      proxy:
+        resources:
+          limits:
+            memory: 256Mi
+          requests:
+            memory: 256Mi
+  visualization:
+    type: "kibana"
+    kibana:
+      nodeSelector:
+          node-role.kubernetes.io/infra: ''
+      replicas: 1
+  collection:
+    logs:
+      type: "fluentd"
+      fluentd: {}
+```
+
+```
+.es('+kubernetes.container_name:logger +message:500')
+.divide(.es('+kubernetes.container_name:logger +message:*'))
+.multiply(100)
+
+.es(*).points(), .es(200).bars().color(#f33
+
+.es(index=project.*, q='admin').label(current),
+.es(index=project.*, q=cart, offset=-10m).label('previous')
+
+oc exec -n openshift-logging \
+  elasticsearch-cdm-giqewkd9-1-5f8b46cdbb-qrqf7 -- es_cluster_health
+  
+oc exec -n openshift-logging \
+  elasticsearch-cdm-giqewkd9-1-5f8b46cdbb-qrqf7 -- \
+  es_util --query=_cat/indices?pretty  
+```
