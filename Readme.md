@@ -184,7 +184,7 @@ rfc2307:
     userNameAttributes: [ uid ]
 ``` 
 
-```
+```console
 oc patch proxy/cluster --type=merge  --patch='{"spec":{"trustedCA":{"name":"<CONFIGMAP-NAME>"}}}'
 oc patch ingresscontroller.operator/default 
 oc patcg apiserver 
@@ -193,7 +193,7 @@ cat WILDCARD.pem CA.pem > COMBINED-CERT.pem
 
 openssl x509 -in wildcard-api.pem -text
 ```
-```console
+```yaml
 config.openshift.io/inject-trusted-cabundle=true
 
         volumeMounts:
@@ -215,14 +215,14 @@ config.openshift.io/inject-trusted-cabundle=true
         name: trusted-ca
 ```
 
-```
+```console
 oc adm cordon worker06
 oc adm drain worker06 -delete-emptydir-data --ignore-daemonsets --force --disable-eviction
 
  oc adm new-project debug --node-selector=""
 ```
 
-```
+```yaml
 storageclass.kubernetes.io/is-default-class=true
 
 
@@ -248,7 +248,7 @@ allowVolumeExpansion: false
       accessModes: [ "ReadWriteOnce" ]        
         
 ```
-```
+```console
 [student@workstation PVs]$ limit1="requests.storage=6G"
 [student@workstation PVs]$ limit2="persistentvolumeclaims=2"
 [student@workstation PVs]$ sclass="iscsi-blk.storageclass.storage.k8s.io"
@@ -260,7 +260,7 @@ allowVolumeExpansion: false
 <storage-class-name>.​storageclass.storage.k8s.io/​requests.storage
 ```  
 
-```
+```yaml
 apiVersion: v1
 kind: PersistentVolume
 metadata:
