@@ -185,13 +185,24 @@ rfc2307:
 ``` 
 
 ```console
+oc create configmap \
+  combined-certs --from-file ca-bundle.crt=combined-cert.pem 
 oc patch proxy/cluster --type=merge  --patch='{"spec":{"trustedCA":{"name":"<CONFIGMAP-NAME>"}}}'
+
+oc create secret tls \
+  custom-tls --cert combined-cert.pem --key wildcard-api-key.pem \
+  -n openshift-config
 oc patch ingresscontroller.operator/default 
+c create secret tls \
+  custom-tls-bundle --cert combined-cert.pem --key wildcard-api-key.pem \
+  -n openshift-ingress
 oc patcg apiserver 
 
 cat WILDCARD.pem CA.pem > COMBINED-CERT.pem
 
 openssl x509 -in wildcard-api.pem -text
+
+
 ```
 ```yaml
 config.openshift.io/inject-trusted-cabundle=true
@@ -213,6 +224,9 @@ config.openshift.io/inject-trusted-cabundle=true
             path: tls-ca-bundle.pem
           name: <CONFIGMAP-NAME>
         name: trusted-ca
+        
+  /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem.      
+        
 ```
 
 ```console
@@ -391,3 +405,34 @@ oc exec -n openshift-logging \
   elasticsearch-cdm-giqewkd9-1-5f8b46cdbb-qrqf7 -- \
   es_util --query=_cat/indices?pretty  
 ```
+
+```
+base64 -w0 chrony.conf
+
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,${chrony_base64}
+          verification: {}
+        filesystem: root
+        mode: 420
+        path: /etc/chrony.conf
+```
+
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv0003 1
+spec:
+  capacity:
+    storage: 5Gi 2
+  volumeMode: Filesystem 3
+  accessModes: 4
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Recycle 5
+  storageClassName: slow 6
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+  nfs: 7
+    path: /tmp
+    ```
