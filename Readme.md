@@ -1,3 +1,47 @@
+## Grafan
+```
+DOCKER_CONFIG_JSON=$(oc extract secret/pull-secret \
+  -n openshift-config --to=-)
+# .dockerconfigjson
+[user@demo ~]$ oc create secret generic \
+  multiclusterhub-operator-pull-secret \
+  -n open-cluster-management-observability \
+  --from-literal=.dockerconfigjson="$DOCKER_CONFIG_JSON" \
+  --type=kubernetes.io/dockerconfigjson
+ ``` 
+
+```yaml
+
+apiVersion: objectbucket.io/v1alpha1
+kind: ObjectBucketClaim
+metadata:
+  name: thanos-bc
+  namespace: open-cluster-management-observability
+spec:
+  storageClassName: ocs-external-storagecluster-ceph-rgw
+  generateBucketName: observability-bucket
+
+apiVersion: observability.open-cluster-management.io/v1beta2
+kind: MultiClusterObservability
+metadata:
+  name: observability
+spec:
+  enableDownsampling: true
+  observabilityAddonSpec:
+    enableMetrics: true
+    interval: 30
+  storageConfig:
+    alertmanagerStorageSize: 1Gi
+    compactStorageSize: 20Gi
+    metricObjectStorage:
+      key: thanos.yaml
+      name: thanos-object-storage
+    receiveStorageSize: 20Gi
+    ruleStorageSize: 1Gi
+    storageClass: ocs-external-storagecluster-ceph-rbd
+    storeStorageSize: 10Gi
+    
+```    
 
 ## Appilcations
 Kustomize - image transfer / nameSuffix namePrefix
@@ -70,6 +114,20 @@ spec:
     - reg1.io/myrepo/myapp:latest
     insecureRegistries: 6
     - insecure.com
+    
+oc label managedcluster managed-cluster \
+  observability=disabled -n open-cluster-management
+  
+
+oc edit multiclusterobservability \
+  -n openshift-multicluster-observability
+...output omitted...
+spec:
+  advanced:
+    receive:
+      replicas: 6
+  enableDownsampling: true
+  
 ```    
 
 ```shell
