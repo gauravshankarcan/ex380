@@ -116,3 +116,11 @@ spec:
   clusterName: managed-cluster
   centralEndpoint: 'central-stackrox.apps.ocp4.example.com:443'
 ```
+
+```
+oc create secret generic quaysecret \
+  --from-file=.dockerconfigjson=/run/user/1000/containers/auth.json \
+  --type=kubernetes.io/dockerconfigjson -n operate-integrate
+oc secrets link default quaysecret \
+  --for=pull -n operate-integrate  
+  
