@@ -81,3 +81,38 @@ oc process \
 podman push localhost/hello:1 \
   central-quay-registry.apps.ocp4.example.com/finance/budget-app-dev:1   
 ```
+
+## Stackrox
+```yaml
+
+apiVersion: platform.stackrox.io/v1alpha1
+kind: SecuredCluster
+metadata:
+  name: stackrox-secured-cluster-services
+  namespace: stackrox
+spec:
+  auditLogs:
+    collection: Auto
+  admissionControl:
+    listenOnUpdates: true
+    bypass: BreakGlassAnnotation
+    contactImageScanners: DoNotScanInline
+    listenOnCreates: true
+    timeoutSeconds: 3
+    listenOnEvents: true
+  scanner:
+    analyzer:
+      scaling:
+        autoScaling: Enabled
+        maxReplicas: 5
+        minReplicas: 2
+        replicas: 3
+    scannerComponent: AutoSense
+  perNode:
+    collector:
+      collection: KernelModule
+      imageFlavor: Regular
+    taintToleration: TolerateTaints
+  clusterName: managed-cluster
+  centralEndpoint: 'central-stackrox.apps.ocp4.example.com:443'
+```
