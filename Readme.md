@@ -200,8 +200,29 @@ The all tag includes all tasks in the play, whether they have a tag or not. This
          line: '<Directory "/var/www/web">'
 
 
+- name: Perform smoke test
+  ansible.builtin.uri:
+    url: "https://{{ blue }}/status"
+    return_content: true
+  register: smoke_test
+  until: "'STATUS_OK' in smoke_test['content']"
+  retries: 12
+  delay: 10
 
 
+- name: Second task
+  hosts: servera.lab.example.com
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Add users and put them in the right groups
+      ansible.builtin.user:
+        name: "{{ item[0]['name'] }}"
+        append: true
+        groups: "{{ item[1] }}"
+        state: present
+      loop: "{{ my_users | subelements('my_groups') }}"
 ```
 
 
@@ -233,3 +254,53 @@ The all tag includes all tasks in the play, whether they have a tag or not. This
 {{ apache_base_packages | union(apache_optional_packages) }}
 {{ webapp_find_files['files'] | map(attribute='path') | list }}"
 "{{ webapp_deployed_files | map('relpath', webapp_content_root_dir) | list }}"
+"'{{ hosts | to_json }}
+
+
+{{ lookup('ansible.builtin.file', 'my.file', errors='warn') }}
+
+"{{ lookup('ansible.builtin.fileglob', '~/.bash*') }}" -->  "{{ query('fileglob', '~/.bash*') }}"
+
+
+
+ansible_facts['dns']['nameservers']	The DNS name servers used for name resolution by the managed host (included in the min subset).
+ansible_facts['domain']	The domain for the managed host.
+ansible_facts['all_ipv4_addresses']	All the IPv4 addresses configured on the managed host.
+ansible_facts['all_ipv6_addresses']	All the IPv6 addresses configured on the managed host.
+ansible_facts['fqdn']	The fully qualified domain name (DNS name) of the managed host.
+ansible_facts['hostname']	The unqualified hostname; the string in the FQDN before the first period.
+
+{{ my_hosts_list | ansible.utils.ipaddr }}
+{{ listips | ansible.utils.ipaddr('netmask') }}
+
+
+| ansible.utils.ipaddr('host')
+ | ansible.utils.ipaddr('net')
+ | ansible.utils.ipaddr('private')
+ | ansible.utils.ipaddr('public')
+ ansible.utils.ipaddr('revdns')
+  ansible.utils.ipaddr('network/prefix')
+  ansible.utils.ipaddr('broadcast')
+
+ {{ listips | ansible.utils.ipaddr | ansible.utils.ipwrap }}
+
+
+       delegate_to: demo.lab.example.com
+      delegate_facts: true
+
+
+
+  serial: 2
+  max_fail_percentage: 30%
+  serial: 25%
+  serial:
+    - 1
+    - 10%
+    - 100%
+
+- name: Reactivate Hosts
+  ansible.builtin.shell: /sbin/activate.sh {{ active_hosts_string }}
+  run_once: true
+  delegate_to: monitor.example.com
+  vars:
+    active_hosts_string: "{{ ansible_play_batch | join(' ')}}"
