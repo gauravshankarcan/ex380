@@ -5,7 +5,9 @@ ansible-navigator run playbook.yml -i inventory -m stdout --eei ee-supported-rhe
 ansible-navigator collections
 ansible-navigator doc redhat.insights.insights_register --mode stdout
 ansible-navigator config  -m stdout --eei ee-supported-rhel8:latest
-ansible-navigator settings --effective --pp missing --eei ee-supported-rhel8
+ansible-navigator settings --effective
+ --pp missing --eei ee-supported-rhel8
+ansible-navigator doc --mode stdout --type inventory --list
 ansible-navigator doc --mode stdout --type inventory --list
 ansible-navigator inventory --mode stdout -i inventory --list
 ansible-navigator inventory --mode stdout --graph webservers   
@@ -24,6 +26,7 @@ ansible-vault view secret.yml --vault-password-file=secret-pass
 ansible-doc -l | grep firewalld
 ansible-inventory -i inventory.ini -y --list > inventory.yaml
 
+python -m pydoc jinja2.filters
 
 subscription-manager register
 subscription-manager repos --enable ansible-automation-platform-2.2-for-rhel-8-x86_64-rpms
@@ -200,3 +203,33 @@ The all tag includes all tasks in the play, whether they have a tag or not. This
 
 
 ```
+
+
+```
+| default(omit)
+{{ pattern | regex_search('test') | default('MESSAGE', true) }}"  Although the regex_search filter returns an empty string, the default filter is used because it includes true.
+{{ [2, 4, 6, 8, 10, 12] | sum }}
+{{ 1764 | root }}
+"{{ [ 2, 4, 6, 8, 10, 12 ] | length }} is eq( 6 )"
+"{{ [ 2, 4, 6, 8, 10, 12 ] | first }} is eq( 2 )"
+"{{ [ 2, 4, 6, 8, 10, 12 ] | last }} is eq( 12 )"
+{{ ['Douglas', 'Marvin', 'Arthur'] | random }}
+"{{ [ 2, 4, 6, 8, 10 ] | reverse }
+"{{ [ 4, 8, 10, 6, 2 ] | sort }} 
+"{{ [ 2, [4, [6, 8]], 10 ] | flatten }}
+"{{ [ 1, 1, 2, 2, 2, 3, 4, 4 ] | unique }}
+"{{ [2, 4, 6, 8, 10] | difference([2, 4, 6, 16]) }}
+{{ {'A':1,'B':2} | combine({'B':4,'C':5}) }} 
+"{{ characters_dict | dict2items }} 
+"{{ characters_items | items2dict }} 
+"'{{ 'Arthur' | hash('sha1') }}
+'{{ 'âÉïôú' | b64encode }}
+"'{{ 'w6LDicOvw7TDug==' | b64decode }}
+{{ 'Marvin' | lower }}
+"'{{ 'Marvin' | upper }}' is eq( 'MARVIN' )"
+"'{{ 'marvin' | capitalize }}' is eq( 'Marvin' )"
+"{{ query_results['json']['results'] | selectattr('name', '==', 'Control Plane Execution Environment') | map(attribute='id') | first }}"
+"'{{ hosts | to_json }}' is eq( hosts_json )"
+{{ apache_base_packages | union(apache_optional_packages) }}
+{{ webapp_find_files['files'] | map(attribute='path') | list }}"
+"{{ webapp_deployed_files | map('relpath', webapp_content_root_dir) | list }}"
