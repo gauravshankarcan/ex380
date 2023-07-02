@@ -17,6 +17,7 @@ ansible-navigator:
     environment-variables:
       set:
         ANSIBLE_CONFIG: /home/student/config-navigator/ansible2.cfg
+        ANSIBLE_PIPELINING: true
     pull:
       policy: missing
 
