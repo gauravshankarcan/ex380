@@ -5,8 +5,7 @@ ansible-navigator run playbook.yml -i inventory -m stdout --eei ee-supported-rhe
 ansible-navigator collections
 ansible-navigator doc redhat.insights.insights_register --mode stdout
 ansible-navigator config  -m stdout --eei ee-supported-rhel8:latest
-ansible-navigator settings --effective
- --pp missing --eei ee-supported-rhel8
+ansible-navigator settings --effective --pp missing --eei ee-supported-rhel8
 ansible-navigator doc --mode stdout --type inventory --list
 ansible-navigator doc --mode stdout --type inventory --list
 ansible-navigator inventory --mode stdout -i inventory --list
@@ -283,7 +282,7 @@ ansible_facts['hostname']	The unqualified hostname; the string in the FQDN befor
   ansible.utils.ipaddr('broadcast')
 
  {{ listips | ansible.utils.ipaddr | ansible.utils.ipwrap }}
-
+```
 
        delegate_to: demo.lab.example.com
       delegate_facts: true
@@ -304,3 +303,41 @@ ansible_facts['hostname']	The unqualified hostname; the string in the FQDN befor
   delegate_to: monitor.example.com
   vars:
     active_hosts_string: "{{ ansible_play_batch | join(' ')}}"
+
+
+ansible-galaxy collection init mynamespace.mycollectio
+ansible-builder create
+
+
+
+
+COPY my-company-ca.pem /etc/pki/ca-trust/source/anchors
+RUN update-ca-trust
+
+
+```yaml
+execution-environment:
+version: 1
+
+build_arg_defaults:
+  EE_BASE_IMAGE: 'registry.redhat.io/ansible-automation-platform-22/ee-supported-rhel8:1.0.0-330'
+
+ansible_config: 'ansible.cfg'
+
+dependencies:
+  galaxy: requirements.yml
+  python: requirements.txt
+
+additional_build_steps:
+  append:
+    - RUN microdnf install which net-tools
+```    
+
+meta/runtime.yml
+---
+requires_ansible: '>=2.9.10'
+
+
+galaxy.yml
+dependencies:
+  ansible.posix: '>=1.0.0'
